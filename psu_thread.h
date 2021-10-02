@@ -9,7 +9,7 @@
 
 //client - 0 ; server - 1
 //client starts initially, server get it
-static ucontext_t context;
+static ucontext_t ctx_main;
 //pthread_t pthd;
 int curr_mode;
 //ucontext_t context;
@@ -35,7 +35,7 @@ void psu_thread_setup_init(int mode)
     if(mode == 0){
         printf("Setting up Client..\n");
 
-        sock_fd = setup_new_socket(mode, "130.203.16.31");
+        sock_fd = setup_new_socket(mode, "130.203.16.32");
         //char * msg = "Hi";
         //int count = send(sock_fd, msg, sizeof(msg), 0);
         //printf("Bytes sent: %d\n", count);
@@ -97,10 +97,26 @@ int psu_thread_create(void * (*user_func)(void*), void *user_args)
     
     }
     else{
+        
+        ssize_t size = 8540;
+        size_t length = 0;
+        size_t n = 0;
+        const char*p = &psut;
+        while(n != size){
+            length = recv(sock_fd, p, size, 0);
+            if(length <= 0){
+                printf("Error in receiving\n");
+                return -1;
+            }
+            
+            p+=length;
+            n += length;
+            printf("Reading %d bytes\n", length);
+    
+        }
 
-
-        int count = recv(sock_fd, &psut, sizeof(psu_thread), 0);
-        printf("Received %d bytes\n", count);
+//        int count = recv(sock_fd, &psut, sizeof(psu_thread), 0);
+//        printf("Received %d bytes\n", count);
        
         greg_t eip = psut.ctx.uc_mcontext.gregs[REG_EIP];
         greg_t ebp = psut.ctx.uc_mcontext.gregs[REG_EBP];
@@ -108,14 +124,14 @@ int psu_thread_create(void * (*user_func)(void*), void *user_args)
         getcontext(&(psut.ctx)); 
         psut.ctx.uc_stack.ss_size=sizeof(psut.stack);
         psut.ctx.uc_stack.ss_sp=psut.stack;
-        psut.ctx.uc_link=NULL;
+        psut.ctx.uc_link=&ctx_main;
         psut.ctx.uc_stack.ss_flags = 0;
 
         makecontext(&(psut.ctx), user_func, 0);
         psut.ctx.uc_mcontext.gregs[REG_EIP] = eip;
         psut.ctx.uc_mcontext.gregs[REG_EBP] = ebp;
-        psut.ctx.uc_mcontext.gregs[REG_ESP] = esp;
-        setcontext(&(psut.ctx));
+        psut.ctx.uc_mcontext.gregs[REG_ESP] = ebp;
+        swapcontext(&ctx_main, &(psut.ctx));
     
 	}
 	return 0; 
@@ -130,10 +146,23 @@ void psu_thread_migrate(const char *hostname)
     greg_t *  ebp = (greg_t *) psut.ctx.uc_mcontext.gregs[REG_EBP];
     psut.ctx.uc_mcontext.gregs[REG_EBP] = (void *) *(ebp);
     psut.ctx.uc_mcontext.gregs[REG_EIP] = __builtin_return_address(0);
-    psut.ctx.uc_mcontext.gregs[REG_ESP] = psut.ctx.uc_mcontext.gregs[REG_ESP] + 48;
- 
+    psut.ctx.uc_mcontext.gregs[REG_ESP] = 0x804f320;
+    printf("Size of psu_thread: %d\n", sizeof(psut));
     if(curr_mode == 0){
-        send(sock_fd, &psut, sizeof(psu_thread), 0);
+
+        ssize_t n;
+        const char *p = &psut;
+        size_t length = sizeof(psut);
+        while(length > 0){
+            n = send(sock_fd, p, length, 0);
+            if(n <= 0){
+                printf("Error in send\n");
+                return -1;
+            }
+            p += n;
+            length -= n;
+            printf("Size sent: %d\n", n);
+        }
         exit(0);
     }
     else{
