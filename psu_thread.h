@@ -103,6 +103,8 @@ int psu_thread_create(void * (*user_func)(void*), void *user_args)
         printf("Received %d bytes\n", count);
        
         greg_t eip = psut.ctx.uc_mcontext.gregs[REG_EIP];
+        greg_t ebp = psut.ctx.uc_mcontext.gregs[REG_EBP];
+        greg_t esp = psut.ctx.uc_mcontext.gregs[REG_ESP];
         getcontext(&(psut.ctx)); 
         psut.ctx.uc_stack.ss_size=sizeof(psut.stack);
         psut.ctx.uc_stack.ss_sp=psut.stack;
@@ -111,6 +113,8 @@ int psu_thread_create(void * (*user_func)(void*), void *user_args)
 
         makecontext(&(psut.ctx), user_func, 0);
         psut.ctx.uc_mcontext.gregs[REG_EIP] = eip;
+        psut.ctx.uc_mcontext.gregs[REG_EBP] = ebp;
+        psut.ctx.uc_mcontext.gregs[REG_ESP] = esp;
         setcontext(&(psut.ctx));
     
 	}
@@ -121,10 +125,19 @@ void psu_thread_migrate(const char *hostname)
 {
 	//thread Migration related code
     getcontext(&(psut.ctx));
+    //psut.ctx.uc_mcontext.gregs[REG_EIP] = __builtin_return_address(0);
+    printf("EBP: %x\n", psut.ctx.uc_mcontext.gregs[REG_EBP]);
+    greg_t *  ebp = (greg_t *) psut.ctx.uc_mcontext.gregs[REG_EBP];
+    psut.ctx.uc_mcontext.gregs[REG_EBP] = (void *) *(ebp);
     psut.ctx.uc_mcontext.gregs[REG_EIP] = __builtin_return_address(0);
-
-    send(sock_fd, &psut, sizeof(psu_thread), 0);
-
-    exit(0);
+    psut.ctx.uc_mcontext.gregs[REG_ESP] = psut.ctx.uc_mcontext.gregs[REG_ESP] + 48;
+ 
+    if(curr_mode == 0){
+        send(sock_fd, &psut, sizeof(psu_thread), 0);
+        exit(0);
+    }
+    else{
+        return;
+    }
 
 }
