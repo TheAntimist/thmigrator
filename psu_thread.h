@@ -20,7 +20,7 @@ int sock_fd;
 
 typedef struct psu_thread_info{
     ucontext_t ctx;
-//    char stack[8192];
+    char stack[8192];
 } psu_thread;
 
 static psu_thread psut;
@@ -83,16 +83,16 @@ int psu_thread_create(void * (*user_func)(void*), void *user_args)
     if(curr_mode == 0){
       // pthread_create(&ptid, NULL, execute_function, NULL);
       // pthread_join(ptid, NULL);
-      
+      //TODO: Maybe incorporate threads 
              
       
       getcontext(&(psut.ctx));
-      psut.ctx.uc_stack.ss_size=sizeof(st1);
-      psut.ctx.uc_stack.ss_sp=st1;
+      psut.ctx.uc_stack.ss_size=sizeof(psut.stack);
+      psut.ctx.uc_stack.ss_sp=psut.stack;
       psut.ctx.uc_link=NULL;
       psut.ctx.uc_stack.ss_flags = 0;
     
-      makecontext(&psut.ctx, user_func, 0);
+      makecontext(&psut.ctx, user_func, 1, user_args);
       setcontext(&psut.ctx);
     
     }
@@ -104,8 +104,8 @@ int psu_thread_create(void * (*user_func)(void*), void *user_args)
        
         greg_t eip = psut.ctx.uc_mcontext.gregs[REG_EIP];
         getcontext(&(psut.ctx)); 
-        psut.ctx.uc_stack.ss_size=sizeof(st1);
-        psut.ctx.uc_stack.ss_sp=st1;
+        psut.ctx.uc_stack.ss_size=sizeof(psut.stack);
+        psut.ctx.uc_stack.ss_sp=psut.stack;
         psut.ctx.uc_link=NULL;
         psut.ctx.uc_stack.ss_flags = 0;
 
