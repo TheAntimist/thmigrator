@@ -10,16 +10,21 @@
 //client - 0 ; server - 1
 //client starts initially, server get it
 static ucontext_t context;
-pthread_t pthd;
+//pthread_t pthd;
 int curr_mode;
+//ucontext_t context;
 
 static char st1[8192];
 
+int sock_fd;
+
 typedef struct psu_thread_info{
-    ucontext_t context;
-    char stack[8192];
-    void* eip;
-} psu_thread_info_t;
+    ucontext_t ctx;
+//    char stack[8192];
+} psu_thread;
+
+static psu_thread psut;
+
 
 void psu_thread_setup_init(int mode)
 {
@@ -27,11 +32,27 @@ void psu_thread_setup_init(int mode)
 
     printf("Initializing psu_thread\n");
     curr_mode = mode;
-    if(mode){
-        printf("Setting up Client\n");
+    if(mode == 0){
+        printf("Setting up Client..\n");
+
+        sock_fd = setup_new_socket(mode, "130.203.16.31");
+        //char * msg = "Hi";
+        //int count = send(sock_fd, msg, sizeof(msg), 0);
+        //printf("Bytes sent: %d\n", count);
+        //exit(0);
     }
     else{
         printf("Setting up server\n");
+        
+        sock_fd = setup_new_socket(mode, "NULL");
+        
+        //char msg[4];
+        //int count = recv(sock_fd, msg, 4, 0);
+
+        //printf("Received: %d bytes\n", count);
+        //printf("Message: %s\n", msg);
+        //exit(0); 
+
     }
 
 	return;
@@ -59,20 +80,38 @@ int psu_thread_create(void * (*user_func)(void*), void *user_args)
 	// create thread and start running the function based on *user_func
 
     //client
-    if(modes == 0){
-       pthread_create(&ptid, NULL, execute_function, NULL);
-       pthread_join(ptid, NULL);
+    if(curr_mode == 0){
+      // pthread_create(&ptid, NULL, execute_function, NULL);
+      // pthread_join(ptid, NULL);
+      
+             
+      
+      getcontext(&(psut.ctx));
+      psut.ctx.uc_stack.ss_size=sizeof(st1);
+      psut.ctx.uc_stack.ss_sp=st1;
+      psut.ctx.uc_link=NULL;
+      psut.ctx.uc_stack.ss_flags = 0;
+    
+      makecontext(&psut.ctx, user_func, 0);
+      setcontext(&psut.ctx);
+    
     }
     else{
-        getcontext(&a); 
-        a.uc_stack.ss_size=sizeof(st1);
-        a.uc_stack.ss_sp=st1;
-        a.uc_link=NULL;
-        a.uc_stack.ss_flags = 0;
 
-        makecontext(&a, user_func, 0);
-        a.uc_mcontext.gregs[REG_EIP] = 0x804884e;
-        setcontext(&a);
+
+        int count = recv(sock_fd, &psut, sizeof(psu_thread), 0);
+        printf("Received %d bytes\n", count);
+       
+        greg_t eip = psut.ctx.uc_mcontext.gregs[REG_EIP];
+        getcontext(&(psut.ctx)); 
+        psut.ctx.uc_stack.ss_size=sizeof(st1);
+        psut.ctx.uc_stack.ss_sp=st1;
+        psut.ctx.uc_link=NULL;
+        psut.ctx.uc_stack.ss_flags = 0;
+
+        makecontext(&(psut.ctx), user_func, 0);
+        psut.ctx.uc_mcontext.gregs[REG_EIP] = eip;
+        setcontext(&(psut.ctx));
     
 	}
 	return 0; 
@@ -81,15 +120,11 @@ int psu_thread_create(void * (*user_func)(void*), void *user_args)
 void psu_thread_migrate(const char *hostname)
 {
 	//thread Migration related code
-    getcontext(&a);
-    void * addr = __builtin_return_address(0);
+    getcontext(&(psut.ctx));
+    psut.ctx.uc_mcontext.gregs[REG_EIP] = __builtin_return_address(0);
 
-    if(modes== 0){
-        pthread_exit(0);
-    }    
-    else{
-    printf("Returning\n");
-    return;
-    }
-    return;
+    send(sock_fd, &psut, sizeof(psu_thread), 0);
+
+    exit(0);
+
 }

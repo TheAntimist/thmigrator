@@ -10,7 +10,7 @@
 
 int setup_new_socket(int mode, char * server_ip){
 
-    //client
+    //server
     if(mode){
         int server_fd, new_socket, valread;
         struct sockaddr_in address;
@@ -75,6 +75,10 @@ int setup_new_socket(int mode, char * server_ip){
         
         return sock;
     }   
+
+    
+    
+
 
 }
 
