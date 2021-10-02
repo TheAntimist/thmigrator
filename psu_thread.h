@@ -80,7 +80,7 @@ int psu_thread_create(void *(*user_func)(void *), void *user_args) {
 
     } else {
 
-        ssize_t size = 8540;
+        ssize_t size = sizeof(psu_thread);
         size_t length = 0;
         size_t n = 0;
         const char *p = &psut;
