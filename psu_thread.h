@@ -12,9 +12,7 @@
 //client - 0 ; server - 1
 //client starts initially, server get it
 static ucontext_t ctx_main;
-//pthread_t pthd;
 int curr_mode;
-
 int sock_fd = -1;
 
 typedef struct psu_context_s {
@@ -75,8 +73,7 @@ void * migrated_thread() {
     psut.ctx.uc_link = &thread_ctx;
     psut.ctx.uc_stack.ss_flags = 0;
 
-    // ArgC is 0, as it's not important here what values are sent, but with 1 the EIP offsets are different.
-    makecontext(&(psut.ctx), thread_obj.user_func, 0);
+    makecontext(&(psut.ctx), thread_obj.user_func, 1, thread_obj.user_args);
     psut.ctx.uc_mcontext.gregs[REG_EIP] = eip;
     psut.ctx.uc_mcontext.gregs[REG_EBP] = ebp;
     psut.ctx.uc_mcontext.gregs[REG_ESP] = esp;
@@ -137,8 +134,7 @@ int psu_thread_migrate(const char *hostname) {
     void ** ebp = (greg_t *) psut.ctx.uc_mcontext.gregs[REG_EBP];
     psut.ctx.uc_mcontext.gregs[REG_EBP] = *(ebp);
     psut.ctx.uc_mcontext.gregs[REG_EIP] = *(ebp + 1);
-    // 8 instead of 4 because of the makecontext argc = 0 during migration.
-    psut.ctx.uc_mcontext.gregs[REG_ESP] = ebp + 8;
+    psut.ctx.uc_mcontext.gregs[REG_ESP] = ebp + 4;
     if (curr_mode == 0) {
         sock_fd = setup_new_socket(curr_mode, hostname);
 
