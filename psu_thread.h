@@ -134,11 +134,11 @@ void proc_exit(int retval) {
 int psu_thread_migrate(const char *hostname) {
     getcontext(&(psut.ctx));
     printf("EBP: %x\n", psut.ctx.uc_mcontext.gregs[REG_EBP]);
-    greg_t *ebp = (greg_t *) psut.ctx.uc_mcontext.gregs[REG_EBP];
-    psut.ctx.uc_mcontext.gregs[REG_EBP] = (void *) *(ebp);
-    psut.ctx.uc_mcontext.gregs[REG_EIP] = __builtin_return_address(0);
+    void ** ebp = (greg_t *) psut.ctx.uc_mcontext.gregs[REG_EBP];
+    psut.ctx.uc_mcontext.gregs[REG_EBP] = *(ebp);
+    psut.ctx.uc_mcontext.gregs[REG_EIP] = *(ebp + 1);
     // 8 instead of 4 because of the makecontext argc = 0 during migration.
-    psut.ctx.uc_mcontext.gregs[REG_ESP] = ((void *) ebp) + 8;
+    psut.ctx.uc_mcontext.gregs[REG_ESP] = ebp + 8;
     if (curr_mode == 0) {
         sock_fd = setup_new_socket(curr_mode, hostname);
 
