@@ -74,11 +74,6 @@ int setup_new_socket(int mode, char * server_ip){
         }        
         
         return sock;
-    }   
-
-    
-    
-
-
+    }
 }
 
