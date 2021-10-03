@@ -138,12 +138,12 @@ int psu_thread_migrate(const char *hostname) {
         while (length > 0) {
             n = send(sock_fd, p, length, 0);
             if (n <= 0) {
-                printf("Error in send\n");
+                printf(" [error] Error occurred while sending data over socket.\n");
                 proc_exit(-1);
             }
             p += n;
             length -= n;
-            printf("Size sent: %d\n", n);
+            printf(" [debug] Sent %d bytes over the socket\n", n);
         }
         proc_exit(0);
     }
