@@ -85,6 +85,7 @@ int migrated_thread(void * thread_ptr) {
 int psu_thread_create(void *(*user_func)(void *), void *user_args) {
     // make thread related setup
     // create thread and start running the function based on *user_func
+    void * thread_retval = NULL;
     psu_thread_t thread_obj;
     thread_obj.user_func = user_func;
     thread_obj.user_args = user_args;
@@ -112,7 +113,8 @@ int psu_thread_create(void *(*user_func)(void *), void *user_args) {
         pthread_create(&thread_obj.ptid, NULL, migrated_thread, &thread_obj);
     }
     // TODO: Should we block here or return?
-    pthread_join(thread_obj.ptid, NULL);
+    pthread_join(thread_obj.ptid, &thread_retval);
+    printf(" [debug] Thread exited with return value: %d\n", *((int *)thread_retval));
     return 0;
 }
 
