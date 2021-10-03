@@ -28,7 +28,10 @@ typedef struct psu_thread {
     void *(*user_func)(void *);
     void *user_args;
     int ptid;
+    int retval;
 } psu_thread_t;
+
+static psu_thread_t thread_obj;
 
 void psu_thread_setup_init(int mode) {
     //Read from a file to set up the socket connection between the client and the server
@@ -42,8 +45,7 @@ void psu_thread_setup_init(int mode) {
     }
 }
 
-int norm_thread(void * thread_ptr) {
-    psu_thread_t * thread_obj = (psu_thread_t *) thread_ptr;
+void * norm_thread() {
 
     ucontext_t thread_ctx;
     getcontext(&(psut.ctx));
@@ -52,14 +54,16 @@ int norm_thread(void * thread_ptr) {
     psut.ctx.uc_link = NULL;
     psut.ctx.uc_stack.ss_flags = 0;
 
-    makecontext(&psut.ctx, thread_obj->user_func, 1, thread_obj->user_args);
-    if(swapcontext(&thread_ctx, &psut.ctx) == -1) return -1;
-
-    return 0;
+    makecontext(&psut.ctx, thread_obj.user_func, 1, thread_obj.user_args);
+    if (swapcontext(&thread_ctx, &(psut.ctx)) == -1) {
+        thread_obj.retval = -1;
+        return NULL;
+    }
+    thread_obj.retval = 0;
+    return NULL;
 }
 
-int migrated_thread(void * thread_ptr) {
-    psu_thread_t * thread_obj = (psu_thread_t *) thread_ptr;
+void * migrated_thread() {
 
     ucontext_t thread_ctx;
     greg_t eip = psut.ctx.uc_mcontext.gregs[REG_EIP];
@@ -72,21 +76,23 @@ int migrated_thread(void * thread_ptr) {
     psut.ctx.uc_stack.ss_flags = 0;
 
     // ArgC is 0, as it's not important here what values are sent, but with 1 the EIP offsets are different.
-    makecontext(&(psut.ctx), thread_obj->user_func, 0);
+    makecontext(&(psut.ctx), thread_obj.user_func, 0);
     psut.ctx.uc_mcontext.gregs[REG_EIP] = eip;
     psut.ctx.uc_mcontext.gregs[REG_EBP] = ebp;
     psut.ctx.uc_mcontext.gregs[REG_ESP] = esp;
-    if (swapcontext(&thread_ctx, &(psut.ctx)) == -1) return -1;
+    if (swapcontext(&thread_ctx, &(psut.ctx)) == -1) {
+        thread_obj.retval = -1;
+        return NULL;
+    }
+    thread_obj.retval = 0;
+    return NULL;
 
-    return 0;
 }
 
 
 int psu_thread_create(void *(*user_func)(void *), void *user_args) {
     // make thread related setup
     // create thread and start running the function based on *user_func
-    void * thread_retval = NULL;
-    psu_thread_t thread_obj;
     thread_obj.user_func = user_func;
     thread_obj.user_args = user_args;
 
@@ -113,14 +119,16 @@ int psu_thread_create(void *(*user_func)(void *), void *user_args) {
         pthread_create(&thread_obj.ptid, NULL, migrated_thread, &thread_obj);
     }
     // TODO: Should we block here or return?
-    pthread_join(thread_obj.ptid, &thread_retval);
-    printf(" [debug] Thread exited with return value: %d\n", *((int *)thread_retval));
+    pthread_join(thread_obj.ptid, NULL);
+    printf(" [debug] Thread exited with value: %d\n", thread_obj.retval);
     return 0;
 }
 
 void proc_exit(int retval) {
     if (sock_fd > -1) shutdown(sock_fd, 2);
-    pthread_exit(retval);
+    thread_obj.retval = retval;
+    pthread_exit(0);
+
 }
 
 int psu_thread_migrate(const char *hostname) {
