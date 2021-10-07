@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/types.h>
+#include <netdb.h>
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <string.h>
@@ -50,30 +52,28 @@ int setup_new_socket(int mode, char * server_ip){
         return new_socket;
     }
 
-    else{
+    else {
 
-        int sock = 0;
-        struct sockaddr_in serv_addr;
-        
-        if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0){
-            printf("\n Socket creation error \n");
-            return -1;
-        }
-        
-        serv_addr.sin_family = AF_INET;
-        serv_addr.sin_port = htons(PORT);
-
-        if(inet_pton(AF_INET, server_ip, &serv_addr.sin_addr)<=0){
-            printf("\n Invalid address\n");
-            return -1;
-        }
-    
-        if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0){
-            printf("\nConnection failed\n");
-            return -1;
-        }        
-        
-        return sock;
+		struct addrinfo hints, *res;
+		int sockfd;
+		
+		// first, load up address structs with getaddrinfo():
+		
+		memset(&hints, 0, sizeof hints);
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = SOCK_STREAM;
+		
+		getaddrinfo(server_ip, "8080", &hints, &res);
+		
+		// make a socket:
+		
+		sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+		
+		// connect!
+		
+		connect(sockfd, res->ai_addr, res->ai_addrlen);
+		freeaddrinfo(res);
+		return sockfd;
     }
 }
 
