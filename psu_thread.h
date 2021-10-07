@@ -17,7 +17,7 @@ int sock_fd = -1;
 
 typedef struct psu_context_s {
     ucontext_t ctx;
-    char stack[8192];
+    char stack[16834];
 } psu_context;
 
 static psu_context psut;

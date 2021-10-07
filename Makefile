@@ -16,15 +16,22 @@ default:
 	gcc $(CFLAGS) $(LIBS) -o $(OUT1) $(SOURCES1)
 	gcc $(CFLAGS) $(LIBS) -o $(OUT2) $(SOURCES2)
 	gcc $(CFLAGS) $(LIBS) -o $(OUT3) $(SOURCES3)
+	gcc $(CFLAGS) $(LIBS) -o $(OUT4) $(SOURCES4)
+	gcc $(CFLAGS) $(LIBS) -o $(OUT5) $(SOURCES5)
+
 debug:
 	gcc -g $(CFLAGS) $(LIBS) -o $(OUT1) $(SOURCES1)
 	gcc -g $(CFLAGS) $(LIBS) -o $(OUT2) $(SOURCES2)
 	gcc -g $(CFLAGS) $(LIBS) -o $(OUT3) $(SOURCES3)
 	gcc -g $(CFLAGS) $(LIBS) -o $(OUT4) $(SOURCES4)
 	gcc -g $(CFLAGS) $(LIBS) -o $(OUT5) $(SOURCES5)
+
 all:
 	gcc $(CFLAGS) $(LIBS) -o $(OUT1) $(SOURCES1)
 	gcc $(CFLAGS) $(LIBS) -o $(OUT2) $(SOURCES2)
 	gcc $(CFLAGS) $(LIBS) -o $(OUT3) $(SOURCES3)
+	gcc $(CFLAGS) $(LIBS) -o $(OUT4) $(SOURCES4)
+	gcc $(CFLAGS) $(LIBS) -o $(OUT5) $(SOURCES5)
+
 clean:
-	rm $(OUT1) $(OUT2) $(OUT3)
+	rm $(OUT1) $(OUT2) $(OUT3) $(OUT4) $(OUT5)
