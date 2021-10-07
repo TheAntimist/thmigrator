@@ -53,7 +53,33 @@ Sample Execution:
  1. First the server is started on host A:
 
  ```sh
- e5-cse-135-01.cse.psu.edu 101$ ./app3 0.0.0.0 1
+> ./app3 0.0.0.0 1
+  [info] Setting up server
+  ...
+ ```
+
+ This will then wait for the client to send data
+
+ 2. Then client is started on the host B:
+
+ ```sh
+> ./app3 e5-cse-135-01.cse.psu.edu 0
+ [info] Setting up Client..
+Hostname: e5-cse-135-05.cse.psu.edu
+Bar: Value of A = 1
+Hostname: e5-cse-135-05.cse.psu.edu
+Bar: Value of A = 2
+Hostname: e5-cse-135-05.cse.psu.edu
+Bar: Value of A = 3
+EBP: 804f478
+ [debug] Sent 17184 bytes over the socket
+ [debug] Thread exited with value: 0
+ ```
+
+ 3. Once the client has sent the data to the server, the complete server output will be as follows:
+
+ ```sh
+ > ./app3 0.0.0.0 1
   [info] Setting up server
   [debug] Reading 2896 bytes
   [debug] Reading 1448 bytes
@@ -76,21 +102,5 @@ Sample Execution:
  Hostname: e5-cse-135-01.cse.psu.edu
  Bar: Exit Value of A = 1
   [debug] Thread exited with value: 0
- ```
-
- 2. Then client is started on the host B:
-
- ```sh
-> ./app3 e5-cse-135-01.cse.psu.edu 0
- [info] Setting up Client..
-Hostname: e5-cse-135-05.cse.psu.edu
-Bar: Value of A = 1
-Hostname: e5-cse-135-05.cse.psu.edu
-Bar: Value of A = 2
-Hostname: e5-cse-135-05.cse.psu.edu
-Bar: Value of A = 3
-EBP: 804f478
- [debug] Sent 17184 bytes over the socket
- [debug] Thread exited with value: 0
  ```
 
