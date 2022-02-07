@@ -61,9 +61,9 @@ Sample Execution:
  2. Then client is started on the host B:
 
  ```sh
-> ./app3 e5-cse-135-01.cse.psu.edu 0
+> ./app3 hostname2 0
  [info] Setting up Client..
-Hostname: e5-cse-135-05.cse.psu.edu
+Hostname: hostname1
 Bar: Value of A = 1
 Hostname: hostname1
 Bar: Value of A = 2
