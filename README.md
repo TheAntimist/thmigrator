@@ -1,6 +1,4 @@
-# Course 511  - Project 1
-
-Group Members: Ankush Aniket Mishra (aam6386@psu.edu), Vinay Kumar Vemuri (vvv5079@psu.edu)
+# Migrate executing threads across machines
 
 ## Overview
 
@@ -12,7 +10,7 @@ without requiring any bootstrapping.
  - `psu_thread.h`: Contains functions which starts and migrates threads
  - `socket.h`: Helper utilities for handling socket based programming.
  - `app4.c`: Extra test case using pointer variables on the stack
- - `app5.c`: Test case using nested function migrations. 
+ - `app5.c`: Test case using nested function migrations.
 
 ## Building
 
@@ -29,7 +27,7 @@ gcc -std=gnu99 -w -m32 -lpthread -pthread -o app5 app5.c
 
 ## Execution
 
-After building multiple executables will be generated.  
+After building multiple executables will be generated.
 
 To run them you need to do:
 
@@ -67,9 +65,9 @@ Sample Execution:
  [info] Setting up Client..
 Hostname: e5-cse-135-05.cse.psu.edu
 Bar: Value of A = 1
-Hostname: e5-cse-135-05.cse.psu.edu
+Hostname: hostname1
 Bar: Value of A = 2
-Hostname: e5-cse-135-05.cse.psu.edu
+Hostname: hostname1
 Bar: Value of A = 3
 EBP: 804f478
  [debug] Sent 17184 bytes over the socket
@@ -87,20 +85,19 @@ EBP: 804f478
   [debug] Reading 2896 bytes
   [debug] Reading 2896 bytes
   [debug] Reading 2704 bytes
- Hostname: e5-cse-135-01.cse.psu.edu
+ Hostname: hostname2
  Bar: Value of A = 4
  Hostname: e5-cse-135-01.cse.psu.edu
  Bar: Value of A = 5
- Hostname: e5-cse-135-01.cse.psu.edu
+ Hostname: hostname2
  Bar: Exit Value of A = 5
- Hostname: e5-cse-135-01.cse.psu.edu
+ Hostname: hostname2
  Bar: Exit Value of A = 4
- Hostname: e5-cse-135-01.cse.psu.edu
+ Hostname: hostname2
  Bar: Exit Value of A = 3
- Hostname: e5-cse-135-01.cse.psu.edu
+ Hostname: hostname2
  Bar: Exit Value of A = 2
- Hostname: e5-cse-135-01.cse.psu.edu
+ Hostname: hostname2
  Bar: Exit Value of A = 1
   [debug] Thread exited with value: 0
  ```
-
